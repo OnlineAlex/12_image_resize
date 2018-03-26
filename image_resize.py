@@ -107,7 +107,7 @@ def print_result_resize(image_path, change_ratio):
     if not os.path.dirname(image_path):
         image_path = os.path.join(os.getcwd(), image_path)
 
-    print('Размер успешлно изменен\n{}'.format(image_path))
+    print('Размер успешно изменен\n{}'.format(image_path))
 
 
 if __name__ == '__main__':

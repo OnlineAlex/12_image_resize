@@ -15,7 +15,7 @@
 ```bash
 > python image_resize.py tevin-trinh.jpg --scale 0.7 --output_path A:\devman
 Изменены пропорции изображения
-Размер успешлно изменен
+Размер успешно изменен
 A:\myproject\tevin-trinh.jpg
 ```
 # Требования
@@ -56,7 +56,7 @@ optional arguments:
  ```bash
 > python image_resize.py A:\myproject\tevin-trinh.jpg --height 1000
 Изменены пропорции изображения
-Размер успешлно изменен
+Размер успешно изменен
 A:\myproject\tevin-trinh__1509x1000.jpg
 ```
 Помните, рекомендуется использовать [virtualenv/venv](https://devman.org/encyclopedia/pip/pip_virtualenv/) для лучшего управления пакетами.

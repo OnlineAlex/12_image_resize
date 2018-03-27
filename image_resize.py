@@ -22,11 +22,11 @@ def is_positive_int(size_str):
 
 def is_positive_float(scale_str):
     scale_float = float(scale_str)
-    if scale_float < 0.1:
-        error_message = 'Отрицательно число: {} <= 0'.format(scale_str)
-        raise argparse.ArgumentTypeError(error_message)
+    if scale_float > 0:
+        return scale_float
 
-    return scale_float
+    error_message = 'Отрицательно число: {} <= 0'.format(scale_str)
+    raise argparse.ArgumentTypeError(error_message)
 
 
 def parsing_arguments():
@@ -63,7 +63,7 @@ def parsing_arguments():
     return parser.parse_args()
 
 
-def save_image(image_path):
+def open_image(image_path):
     try:
         image = Image.open(image_path)
         return image
@@ -135,7 +135,7 @@ if __name__ == '__main__':
     elif not any([arg.height, arg.widht, arg.scale]):
         exit('Вы не написали по каким критериям изменять размер изображения')
 
-    original_img = save_image(arg.img_path)
+    original_img = open_image(arg.img_path)
     if not original_img:
         exit('Формат изображения не поддерживается')
 

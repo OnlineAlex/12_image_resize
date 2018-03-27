@@ -3,63 +3,60 @@ from PIL import Image
 import os
 
 
-def validation_image(string):
-    valid_formats = ['.png', '.jpg']
-
-    if not os.path.exists(string):
-        raise argparse.ArgumentTypeError('Изоражение не найдено')
-
-    image_format = os.path.splitext(string)[-1]
-    if image_format not in valid_formats:
-        error_message = 'Формат изображения не поддерживается'
+def is_valid_path(argument_path):
+    if not os.path.exists(argument_path):
+        error_message = 'Путь {} не существует'.format(argument_path)
         raise argparse.ArgumentTypeError(error_message)
 
-    return string
+    return argument_path
 
 
-def validation_path(string):
-    if not os.path.exists(string):
-        raise argparse.ArgumentTypeError('Папку не найдено')
-
-    return string
-
-
-def validation_positive_float(string):
-    number_float = float(string)
-    if 0 >= number_float:
-        error_message = 'Отрицательно число: {} <= 0'.format(string)
+def is_positive_int(size_str):
+    size_int = int(size_str)
+    if size_int < 1:
+        error_message = 'Отрицательно число: {} <= 0'.format(size_str)
         raise argparse.ArgumentTypeError(error_message)
-    return number_float
+
+    return size_int
+
+
+def is_positive_float(scale_str):
+    scale_float = float(scale_str)
+    if scale_float < 0.1:
+        error_message = 'Отрицательно число: {} <= 0'.format(scale_str)
+        raise argparse.ArgumentTypeError(error_message)
+
+    return scale_float
 
 
 def parsing_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         'img_path',
-        type=validation_image,
+        type=is_valid_path,
         help='Адрес изображения'
     )
     parser.add_argument(
         '--widht',
-        type=validation_positive_float,
+        type=is_positive_int,
         default=False,
         help='Ширина изображения в px >0'
     )
     parser.add_argument(
         '--height',
-        type=validation_positive_float,
+        type=is_positive_int,
         default=False,
         help='Высота изображения в px >0'
     )
     parser.add_argument(
         '--scale',
-        type=validation_positive_float,
+        type=is_positive_float,
         default=False,
         help='Пропорция изменения размера >0'
     )
     parser.add_argument(
         '--output_path',
-        type=validation_path,
+        type=is_valid_path,
         default=False,
         help='Адрес измененного изображения'
     )
@@ -67,13 +64,12 @@ def parsing_arguments():
 
 
 def get_new_size(old_size, widht, height, scale):
-    old_widht = old_size[0]
-    old_height = old_size[1]
+    old_widht, old_height = old_size
 
     if height and widht:
         new_widht, new_height = widht, height
     elif widht:
-        new_height = old_widht / old_height / widht
+        new_height = widht / (old_widht / old_height)
         new_widht = widht
     elif height:
         new_widht = old_widht / old_height * height
@@ -86,26 +82,39 @@ def get_new_size(old_size, widht, height, scale):
     return int(new_widht), int(new_height)
 
 
-def resize_image(image, new_image_size):
-    return image.resize(new_image_size, Image.ANTIALIAS)
+def has_new_ratio(old_size, new_size):
+    old_widht, old_height = old_size
+    new_widht, new_height = new_size
+    old_ratio = old_widht / old_height
+    new_ratio = new_widht / new_height
+    return abs(old_ratio - new_ratio) > 0.05
 
 
-def get_new_image_name(old_name, new_image_size):
+def get_new_image_path(image_path, image_name):
+    if image_path:
+        return os.path.join(image_path, image_name)
+    else:
+        return os.path.join(os.getcwd(), image_name)
+
+
+def resize_image(image, image_size):
+    return image.resize(image_size, Image.ANTIALIAS)
+
+
+def get_new_image_name(old_name, image_size):
     main_name, img_format = os.path.splitext(old_name)
     new_name = '{}__{}x{}{}'.format(
         main_name,
-        new_image_size[0],
-        new_image_size[1],
+        image_size[0],
+        image_size[1],
         img_format
     )
     return new_name
 
 
-def print_result_resize(image_path, change_ratio):
+def print_result_resizing(image_path, change_ratio):
     if change_ratio:
         print('Изменены пропорции изображения')
-    if not os.path.dirname(image_path):
-        image_path = os.path.join(os.getcwd(), image_path)
 
     print('Размер успешно изменен\n{}'.format(image_path))
 
@@ -118,35 +127,37 @@ if __name__ == '__main__':
     elif not any([arg.height, arg.widht, arg.scale]):
         exit('Вы не написали по каким критериям изменять размер изображения')
 
+    try:
+        original_img = Image.open(arg.img_path)
+    except IOError:
+        exit('Формат изображения не поддерживается')
+
     user_img = {
-        'image': Image.open(arg.img_path),
+        'image': original_img,
         'name': os.path.basename(arg.img_path),
-        'size': Image.open(arg.img_path).size
+        'size': original_img.size
     }
 
-    new_size = get_new_size(
+    new_image_size = get_new_size(
         user_img['size'],
         arg.widht,
         arg.height,
         arg.scale
     )
-    is_change_ratio = bool(
-        new_size[0] / new_size[1] != user_img['size'][0] / user_img['size'][1]
-    )
-    resized_img = resize_image(user_img['image'], new_size)
+    is_ratio_changed = has_new_ratio(user_img['size'], new_image_size)
+    resized_img = resize_image(user_img['image'], new_image_size)
 
     if arg.output_path:
-        new_image_path = os.path.join(
+        new_image_path = get_new_image_path(
             arg.output_path,
             user_img['name']
         )
-        resized_img.save(new_image_path)
     else:
-        new_image_name = get_new_image_name(user_img['name'], new_size)
-        new_image_path = os.path.join(
+        new_image_name = get_new_image_name(user_img['name'], new_image_size)
+        new_image_path = get_new_image_path(
             os.path.dirname(arg.img_path),
             new_image_name
         )
-        resized_img.save(new_image_name)
 
-    print_result_resize(new_image_path, is_change_ratio)
+    resized_img.save(new_image_path)
+    print_result_resizing(new_image_path, is_ratio_changed)

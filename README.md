@@ -14,7 +14,6 @@
 
 ```bash
 > python image_resize.py tevin-trinh.jpg --scale 0.7 --output_path A:\devman
-Изменены пропорции изображения
 Размер успешно изменен
 A:\myproject\tevin-trinh.jpg
 ```
@@ -55,7 +54,6 @@ optional arguments:
 Если `--output_path` не задан, изображение сохранится рядом с измененным именем
  ```bash
 > python image_resize.py A:\myproject\tevin-trinh.jpg --height 1000
-Изменены пропорции изображения
 Размер успешно изменен
 A:\myproject\tevin-trinh__1509x1000.jpg
 ```

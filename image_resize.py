@@ -63,6 +63,14 @@ def parsing_arguments():
     return parser.parse_args()
 
 
+def save_image(image_path):
+    try:
+        image = Image.open(image_path)
+        return image
+    except OSError:
+        return False
+
+
 def get_new_size(old_size, widht, height, scale):
     old_widht, old_height = old_size
 
@@ -127,15 +135,14 @@ if __name__ == '__main__':
     elif not any([arg.height, arg.widht, arg.scale]):
         exit('Вы не написали по каким критериям изменять размер изображения')
 
-    try:
-        original_img = Image.open(arg.img_path)
-    except IOError:
+    original_img = save_image(arg.img_path)
+    if not original_img:
         exit('Формат изображения не поддерживается')
 
     user_img = {
-        'image': original_img,
+        'image': Image.open(arg.img_path),
         'name': os.path.basename(arg.img_path),
-        'size': original_img.size
+        'size': Image.open(arg.img_path).size
     }
 
     new_image_size = get_new_size(
